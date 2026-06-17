@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>에스프레소 머신 시뮬레이터</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1>에스프레소 머신 시뮬레이터</h1>
+            <p>98+ 안정 연속추출</p>
+          </div>
+        </div>
+        <div class="transport" aria-label="시뮬레이션 제어">
+          <button class="button primary" id="toggleRun" type="button">일시정지</button>
+          <button class="button" id="toggleBrew" type="button">샷 시작</button>
+          <button class="button ghost" id="resetSim" type="button">초기화</button>
+          <output class="clock" id="clock">00:00</output>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel stage-panel" aria-label="머신 상태">
+          <div class="stage-header">
+            <div>
+              <h2>머신 상태</h2>
+              <p id="modeLabel">예열 중</p>
+            </div>
+            <div class="mode-pill" id="readyLabel">HEATING</div>
+          </div>
+
+          <div class="machine-stage">
+            <div class="machine" aria-hidden="true">
+              <div class="gauge">
+                <div class="gauge-face">
+                  <span class="gauge-tick tick-left"></span>
+                  <span class="gauge-tick tick-mid"></span>
+                  <span class="gauge-tick tick-right"></span>
+                  <span class="needle" id="pressureNeedle"></span>
+                  <span class="gauge-hub"></span>
+                </div>
+                <span class="gauge-label">bar</span>
+              </div>
+
+              <div class="machine-body">
+                <div class="boiler">
+                  <span class="boiler-fill" id="boilerFill"></span>
+                  <span class="boiler-shine"></span>
+                  <span class="heater-glow" id="heaterGlow"></span>
+                </div>
+                <div class="group-head">
+                  <span class="group-light" id="groupLight"></span>
+                </div>
+                <div class="portafilter">
+                  <span class="handle"></span>
+                  <span class="basket"></span>
+                </div>
+                <div class="cup">
+                  <span class="espresso-level" id="espressoLevel"></span>
+                </div>
+                <div class="stream" id="stream">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+
+              <div class="pump-line">
+                <span id="pumpPulse"></span>
+              </div>
+            </div>
+
+            <div class="metrics-grid">
+              <article class="metric">
+                <span>수온</span>
+                <strong id="waterTemp">25.0°C</strong>
+              </article>
+              <article class="metric">
+                <span>보일러</span>
+                <strong id="boilerTemp">25.0°C</strong>
+                <small id="boilerSetpoint">목표 99.0°C</small>
+              </article>
+              <article class="metric">
+                <span>압력</span>
+                <strong id="pressure">0.0 bar</strong>
+              </article>
+              <article class="metric">
+                <span>유량</span>
+                <strong id="flowRate">0.0 ml/s</strong>
+              </article>
+              <article class="metric">
+                <span>히터</span>
+                <strong id="heaterDuty">0%</strong>
+              </article>
+              <article class="metric">
+                <span>샷 무게</span>
+                <strong id="shotMass">0.0 g</strong>
+              </article>
+              <article class="metric">
+                <span>급수</span>
+                <strong id="refillFlow">0.0 ml/s</strong>
+                <small id="totalRefill">보충 0 ml</small>
+              </article>
+              <article class="metric">
+                <span>급수온</span>
+                <strong id="feedTemp">25.0°C</strong>
+                <small id="rawFeedTemp">원수 18.0°C</small>
+              </article>
+              <article class="metric">
+                <span>보일러 수위</span>
+                <strong id="boilerLevel">100%</strong>
+                <small id="boilerLevelDetail">1800 ml</small>
+              </article>
+              <article class="metric">
+                <span>급수 열부하</span>
+                <strong id="refillHeatLoad">0 W</strong>
+                <small>보충량 기반</small>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel control-panel" aria-label="시뮬레이션 설정">
+          <div class="control-title">
+            <h2>설정</h2>
+            <label class="switch">
+              <input id="continuousMode" type="checkbox" />
+              <span></span>
+              연속작동
+            </label>
+          </div>
+
+          <div class="control-grid">
+            <label class="control">
+              <span>목표 수온 <output id="targetTempValue">93°C</output></span>
+              <input id="targetTemp" type="range" min="86" max="98" value="93" step="0.5" />
+            </label>
+            <label class="control">
+              <span>외부 온도 <output id="ambientTempValue">22°C</output></span>
+              <input id="ambientTemp" type="range" min="2" max="38" value="22" step="1" />
+            </label>
+            <label class="control">
+              <span>펌프 압력 <output id="pumpPressureValue">9.0 bar</output></span>
+              <input id="pumpPressure" type="range" min="3" max="12" value="9" step="0.1" />
+            </label>
+            <label class="control">
+              <span>퍽 저항 <output id="puckResistanceValue">1.55</output></span>
+              <input id="puckResistance" type="range" min="0.55" max="2.4" value="1.55" step="0.05" />
+            </label>
+            <label class="control">
+              <span>히터 출력 <output id="heaterPowerValue">5200 W</output></span>
+              <input id="heaterPower" type="range" min="1400" max="5200" value="5200" step="50" />
+            </label>
+            <label class="control">
+              <span>보일러 용량 <output id="boilerVolumeValue">4200 ml</output></span>
+              <input id="boilerVolume" type="range" min="600" max="4200" value="4200" step="100" />
+            </label>
+            <label class="control">
+              <span>열손실 <output id="thermalLossValue">1.5 W/K</output></span>
+              <input id="thermalLoss" type="range" min="1.5" max="12" value="1.5" step="0.5" />
+            </label>
+            <label class="control">
+              <span>급수 온도 <output id="inletWaterTempValue">22°C</output></span>
+              <input id="inletWaterTemp" type="range" min="2" max="34" value="22" step="1" />
+            </label>
+            <label class="control">
+              <span>급수 능력 <output id="refillRateValue">9.0 ml/s</output></span>
+              <input id="refillRate" type="range" min="0.6" max="9" value="9" step="0.1" />
+            </label>
+            <label class="control">
+              <span>프리히트 <output id="preheatEfficiencyValue">90%</output></span>
+              <input id="preheatEfficiency" type="range" min="0" max="90" value="90" step="5" />
+            </label>
+            <label class="control">
+              <span>프리인퓨전 <output id="preinfusionValue">5 s</output></span>
+              <input id="preinfusion" type="range" min="0" max="12" value="5" step="0.5" />
+            </label>
+            <label class="control">
+              <span>샷 시간 <output id="shotDurationValue">28 s</output></span>
+              <input id="shotDuration" type="range" min="12" max="50" value="28" step="1" />
+            </label>
+            <label class="control">
+              <span>회복 시간 <output id="restDurationValue">3 s</output></span>
+              <input id="restDuration" type="range" min="0" max="30" value="3" step="1" />
+            </label>
+            <label class="control">
+              <span>진행 속도 <output id="simSpeedValue">8x</output></span>
+              <input id="simSpeed" type="range" min="0.5" max="20" value="8" step="0.5" />
+            </label>
+          </div>
+
+          <label class="switch auto-heat">
+            <input id="autoHeat" type="checkbox" checked />
+            <span></span>
+            자동 PID 가열
+          </label>
+        </aside>
+
+        <section class="panel chart-panel" aria-label="시뮬레이션 그래프">
+          <div class="chart-header">
+            <div>
+              <h2>열 · 압력 기록</h2>
+              <p id="cycleLabel">대기</p>
+            </div>
+            <div class="legend">
+              <span class="legend-item temp">수온</span>
+              <span class="legend-item boiler">보일러</span>
+              <span class="legend-item pressure">압력</span>
+            </div>
+          </div>
+          <canvas id="historyChart" width="900" height="330"></canvas>
+        </section>
+
+        <section class="panel shot-panel" aria-label="추출 프로파일">
+          <div class="shot-summary">
+            <div>
+              <span>현재 샷</span>
+              <strong id="shotTimer">0.0 s</strong>
+            </div>
+            <div>
+              <span>평균 수온</span>
+              <strong id="avgTemp">0.0°C</strong>
+            </div>
+            <div>
+              <span>평균 압력</span>
+              <strong id="avgPressure">0.0 bar</strong>
+            </div>
+            <div>
+              <span>TDS</span>
+              <strong id="tds">0.0%</strong>
+            </div>
+            <div>
+              <span>추출 수율</span>
+              <strong id="extractionYield">0.0%</strong>
+            </div>
+            <div>
+              <span>품질</span>
+              <strong id="qualityScore">0점</strong>
+            </div>
+          </div>
+          <canvas id="shotChart" width="900" height="220"></canvas>
+        </section>
+
+        <section class="panel log-panel" aria-label="최근 샷">
+          <div class="log-header">
+            <h2>최근 샷</h2>
+            <span id="shotCount">0 shots</span>
+          </div>
+          <div class="shot-log" id="shotLog">
+            <p class="empty-log">샷 데이터가 아직 없습니다.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
