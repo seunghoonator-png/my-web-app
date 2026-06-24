@@ -20,12 +20,88 @@
         <div class="transport" aria-label="시뮬레이션 제어">
           <button class="button primary" id="toggleRun" type="button">일시정지</button>
           <button class="button" id="toggleBrew" type="button">샷 시작</button>
+          <button class="button" id="toggleSound" type="button">소리 켜기</button>
           <button class="button ghost" id="resetSim" type="button">초기화</button>
           <output class="clock" id="clock">00:00</output>
         </div>
       </header>
 
       <main class="workspace">
+        <section class="panel game-panel" aria-label="머신 빌드 게임">
+          <div class="game-toolbar">
+            <div class="mode-tabs" role="tablist" aria-label="게임 모드">
+              <button class="mode-tab active" id="challengeMode" type="button" role="tab" aria-selected="true">도전 모드</button>
+              <button class="mode-tab" id="sandboxMode" type="button" role="tab" aria-selected="false">샌드박스</button>
+            </div>
+            <div class="quote-total">
+              <span>시뮬레이션 견적</span>
+              <strong id="totalCost">0만원</strong>
+            </div>
+          </div>
+
+          <div class="challenge-content" id="challengeContent">
+            <div class="stage-copy">
+              <span class="stage-number" id="stageNumber">STAGE 1</span>
+              <h2 id="stageName">동네 카페의 첫 머신</h2>
+              <p id="stageBrief">정해진 예산 안에서 연속 추출 품질을 확보하세요.</p>
+            </div>
+            <div class="goal-grid">
+              <div>
+                <span>최저 품질</span>
+                <strong id="goalQuality">85점</strong>
+              </div>
+              <div>
+                <span>연속 샷</span>
+                <strong id="goalShots">3회</strong>
+              </div>
+              <div>
+                <span>예산 상한</span>
+                <strong id="goalBudget">1,200만원</strong>
+              </div>
+              <div>
+                <span>최대 사이클</span>
+                <strong id="goalCycle">50초</strong>
+              </div>
+              <div>
+                <span>회수 목표</span>
+                <strong id="goalPayback">3.2개월</strong>
+              </div>
+              <div>
+                <span>현재 진행</span>
+                <strong id="stageProgress">0 / 3</strong>
+              </div>
+            </div>
+            <div class="budget-track" aria-label="예산 사용률">
+              <span id="budgetFill"></span>
+            </div>
+            <div class="economy-strip" aria-label="현재 운영성 지표">
+              <span>잔당 사이클 <strong id="currentCycle">36초</strong></span>
+              <span>하루 처리량 <strong id="dailyCapacity">69잔</strong></span>
+              <span>기계값 회수 <strong id="currentPayback">3.1개월</strong></span>
+            </div>
+            <div class="stage-footer">
+              <p class="stage-status" id="stageStatus">세팅을 정한 뒤 테스트를 시작하세요.</p>
+              <div class="stage-actions">
+                <button class="button primary" id="runStage" type="button">테스트 시작</button>
+                <button class="button" id="nextStage" type="button" hidden>다음 스테이지</button>
+                <button class="button ghost" id="autoTuneStage" type="button">자동 세팅</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sandbox-content" id="sandboxContent" hidden>
+            <div>
+              <span class="stage-number">SANDBOX</span>
+              <h2>자유 설계</h2>
+              <p>예산과 성능 목표 없이 모든 설정을 자유롭게 시험합니다.</p>
+            </div>
+            <div class="sandbox-actions">
+              <span id="sandboxPresetStatus">제한 없음</span>
+              <button class="button primary" id="perfectShotPreset" type="button">100점 세팅</button>
+            </div>
+          </div>
+        </section>
+
         <section class="panel stage-panel" aria-label="머신 상태">
           <div class="stage-header">
             <div>
@@ -36,7 +112,7 @@
           </div>
 
           <div class="machine-stage">
-            <div class="machine" aria-hidden="true">
+            <div class="machine" id="machineVisual" aria-hidden="true">
               <div class="gauge">
                 <div class="gauge-face">
                   <span class="gauge-tick tick-left"></span>
@@ -73,6 +149,25 @@
 
               <div class="pump-line">
                 <span id="pumpPulse"></span>
+              </div>
+
+              <div class="prep-station phase-ready" id="prepStation">
+                <div class="knockbox"><span></span></div>
+                <div class="prep-grinder">
+                  <span class="hopper"></span>
+                  <span class="grinder-body"></span>
+                  <span class="grinder-nozzle"></span>
+                </div>
+                <div class="prep-tamper"></div>
+                <div class="workflow-portafilter">
+                  <span class="workflow-basket"></span>
+                  <span class="workflow-handle"></span>
+                </div>
+                <div class="grounds-fall">
+                  <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="spent-puck"></div>
+                <span class="workflow-label" id="workflowLabel">준비 완료</span>
               </div>
             </div>
 
@@ -129,11 +224,17 @@
         <aside class="panel control-panel" aria-label="시뮬레이션 설정">
           <div class="control-title">
             <h2>설정</h2>
-            <label class="switch">
-              <input id="continuousMode" type="checkbox" />
-              <span></span>
-              연속작동
-            </label>
+            <div class="switch-setting compact">
+              <div class="switch-with-help">
+                <label class="switch">
+                  <input id="continuousMode" type="checkbox" />
+                  <span></span>
+                  연속작동
+                </label>
+                <button class="help-button" type="button" data-factor-help="continuousMode" aria-label="연속작동 도움말">?</button>
+              </div>
+              <small class="factor-cost" id="cost-continuousMode"></small>
+            </div>
           </div>
 
           <div class="control-grid">
@@ -193,13 +294,23 @@
               <span>진행 속도 <output id="simSpeedValue">8x</output></span>
               <input id="simSpeed" type="range" min="0.5" max="20" value="8" step="0.5" />
             </label>
+            <label class="control">
+              <span>소리 볼륨 <output id="soundVolumeValue">55%</output></span>
+              <input id="soundVolume" type="range" min="0" max="100" value="55" step="1" />
+            </label>
           </div>
 
-          <label class="switch auto-heat">
-            <input id="autoHeat" type="checkbox" checked />
-            <span></span>
-            자동 PID 가열
-          </label>
+          <div class="switch-setting auto-heat">
+            <div class="switch-with-help">
+              <label class="switch">
+                <input id="autoHeat" type="checkbox" checked />
+                <span></span>
+                자동 PID 가열
+              </label>
+              <button class="help-button" type="button" data-factor-help="autoHeat" aria-label="자동 PID 가열 도움말">?</button>
+            </div>
+            <small class="factor-cost" id="cost-autoHeat"></small>
+          </div>
         </aside>
 
         <section class="panel chart-panel" aria-label="시뮬레이션 그래프">
@@ -258,5 +369,15 @@
         </section>
       </main>
     </div>
+
+    <dialog class="help-dialog" id="helpDialog">
+      <form method="dialog" class="help-dialog-inner">
+        <button class="help-close" id="closeHelp" type="submit" aria-label="도움말 닫기">×</button>
+        <span class="stage-number">FACTOR HELP</span>
+        <h2 id="helpTitle">설정 도움말</h2>
+        <p id="helpBody"></p>
+        <div class="help-impact" id="helpImpact"></div>
+      </form>
+    </dialog>
   </body>
 </html>
